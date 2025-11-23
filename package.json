@@ -3,13 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "homepage": "https://github.com/MrShrimp5566/robot-arm-simulator",
   "description": "Interactive 2D robot arm physics simulator with inverse kinematics",
   "author": "Your Name",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -18,6 +21,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "gh-pages": "^6.1.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.2"
