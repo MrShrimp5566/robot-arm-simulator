@@ -51,5 +51,108 @@ An interactive 2D robot arm physics simulator built with React and HTML5 Canvas.
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/robot-arm-simulator.git
+cd robot-arm-simulator
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Visit `http://localhost:5173` to see the app.
+
+### Build for Production
+
+```bash
+npm run build
+npm run preview
+```
+
+## 📁 Project Structure
 
 ```
+robot-arm-simulator/
+├── public/
+│   └── robot.svg              # Favicon
+├── src/
+│   ├── components/
+│   │   └── RobotArm.jsx       # Main robot arm component
+│   ├── App.jsx                # App wrapper
+│   ├── main.jsx               # React entry point
+│   └── index.css              # Global styles + Tailwind
+├── index.html                 # HTML entry point
+├── package.json               # Dependencies
+├── vite.config.js             # Vite configuration
+├── tailwind.config.js         # Tailwind CSS config
+├── postcss.config.js          # PostCSS configuration
+├── .gitignore                 # Git ignore rules
+└── README.md                  # This file
+```
+
+## 🛠️ Technologies
+
+- **React 18** - UI framework with hooks
+- **Vite** - Lightning-fast build tool and dev server
+- **Tailwind CSS** - Utility-first styling
+- **HTML5 Canvas** - High-performance graphics rendering
+
+## 🎯 Technical Highlights
+
+- **2-Link IK Solver**: Analytical inverse kinematics solution using trigonometry
+- **Physics Engine**: Custom gravity, collision detection, and elastic/inelastic response
+- **Animation Loop**: RequestAnimationFrame for smooth 60fps rendering
+- **State Management**: useRef for high-performance state in animation loop
+- **Keyboard Events**: Global keyboard listener for accessibility
+- **Real-time Feedback**: Success/error messages with auto-dismiss
+
+## 🎨 Features Breakdown
+
+### Inverse Kinematics
+
+The simulator uses analytical inverse kinematics to solve for joint angles given a target end-effector position. The solution uses the law of cosines and handles workspace boundaries.
+
+### Physics Simulation
+
+- **Gravity**: Constant downward acceleration (0.5 units/frame²)
+- **Friction**: Surface friction coefficient (0.8)
+- **Bounce**: Restitution coefficient (0.3)
+- **Collision Detection**: AABB (Axis-Aligned Bounding Box) collision with response
+- **Box-Box Collisions**: Separating axis theorem with impulse resolution
+
+### Control Modes
+
+1. **Click-to-Move**: IK-based automatic movement
+2. **Joint Dragging**: Direct manipulation of shoulder/elbow
+3. **Slider Control**: Precise angle adjustment
+4. **Keyboard Control**: Fast claw operation
+
+## 🐛 Known Limitations
+
+- 2D simulation only (no depth/3D movement)
+- Simple gripper (no force feedback or slip detection)
+- Fixed workspace boundaries
+- Maximum 4 boxes in simulation
+
+## 📝 License
+
+MIT License - feel free to use this project for learning or your own projects!
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+
+- Report bugs
+- Suggest new features
+- Submit pull requests
+- Improve documentation
+
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
