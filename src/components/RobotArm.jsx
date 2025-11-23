@@ -5,9 +5,10 @@ function RobotArm() {
   const [joint1, setJoint1] = useState(45);
   const [joint2, setJoint2] = useState(-30);
   const [stackCount, setStackCount] = useState(1);
-  const [clawOpen, setClawOpen] = useState(true);
+  const [clawClosed, setClawClosed] = useState(false);
   const [error, setError] = useState('');
   const [heldBox, setHeldBox] = useState(null);
+  const [success, setSuccess] = useState('');
   
   // State refs for animation loop
   const stateRef = useRef({
@@ -17,7 +18,7 @@ function RobotArm() {
     targetJ2: -30,
     isAnimating: false,
     dragging: null,
-    clawOpen: true,
+    clawClosed: false,
     heldBox: null,
     targetPt: null,
     boxes: [
@@ -53,7 +54,12 @@ function RobotArm() {
 
   const showError = (msg) => {
     setError(msg);
-    setTimeout(() => setError(''), 1500);
+    setTimeout(() => setError(''), 2000);
+  };
+
+  const showSuccess = (msg) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(''), 2000);
   };
 
   const updatePhysics = () => {
@@ -185,7 +191,7 @@ function RobotArm() {
     ctx.beginPath(); ctx.moveTo(elbow.x, elbow.y); ctx.lineTo(end.x, end.y); ctx.stroke();
     
     // Claw
-    const cLen = 18, cSpread = state.clawOpen ? 0.45 : 0.12;
+    const cLen = 18, cSpread = state.clawClosed ? 0.12 : 0.45;
     ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(end.x, end.y);
@@ -223,6 +229,21 @@ function RobotArm() {
     return () => cancelAnimationFrame(animId);
   }, []);
 
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.code === 'Space' || e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        handleClawToggle();
+      } else if (e.key.toLowerCase() === 'r') {
+        handleReset();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
   const handleCanvasClick = (e) => {
     const state = stateRef.current;
     if (state.dragging) return;
@@ -238,7 +259,7 @@ function RobotArm() {
       state.targetPt = { x, y };
       state.isAnimating = true;
     } else {
-      showError('Unreachable!');
+      showError('⚠️ Out of reach!');
     }
   };
 
@@ -278,19 +299,28 @@ function RobotArm() {
   const handleClawToggle = () => {
     const state = stateRef.current;
     const { end } = getArmPos(state.joint1, state.joint2);
-    if (state.clawOpen) {
+    
+    if (!state.clawClosed) {
+      // Closing claw - try to grab
       const near = state.boxes.find(b => Math.hypot(b.x - end.x, b.y - end.y) < 40);
       if (near) {
         state.heldBox = near.id;
         setHeldBox(near.id);
+        showSuccess('✓ Grabbed box!');
+      } else {
+        showError('✗ No box nearby');
       }
-      state.clawOpen = false;
-      setClawOpen(false);
+      state.clawClosed = true;
+      setClawClosed(true);
     } else {
+      // Opening claw - drop
+      if (state.heldBox) {
+        showSuccess('✓ Dropped box!');
+      }
       state.heldBox = null;
       setHeldBox(null);
-      state.clawOpen = true;
-      setClawOpen(true);
+      state.clawClosed = false;
+      setClawClosed(false);
     }
   };
 
@@ -302,9 +332,10 @@ function RobotArm() {
       { id: 4, x: 260, y: 294, vx: 0, vy: 0, color: '#a855f7', size: 26 },
     ];
     stateRef.current.heldBox = null;
-    stateRef.current.clawOpen = true;
+    stateRef.current.clawClosed = false;
     setHeldBox(null);
-    setClawOpen(true);
+    setClawClosed(false);
+    showSuccess('✓ Reset complete!');
   };
 
   const handleSlider1Change = (e) => {
@@ -325,15 +356,21 @@ function RobotArm() {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="text-xs text-yellow-400 mb-2">
-        Stack: <span className="font-bold">{stackCount}</span> high
-        {stackCount >= 3 && <span className="ml-2">🏆 Nice!</span>}
-        {stackCount >= 4 && <span className="ml-2 text-purple-400">⭐ Perfect!</span>}
+      <div className="text-xs text-yellow-400 mb-2 flex items-center gap-3">
+        <span>Stack: <span className="font-bold">{stackCount}</span> high</span>
+        {stackCount >= 3 && <span className="text-green-400">🏆 Nice!</span>}
+        {stackCount >= 4 && <span className="text-purple-400">⭐ Perfect!</span>}
       </div>
       
       {error && (
-        <div className="bg-red-600 text-white px-3 py-1 rounded text-xs mb-2">
+        <div className="bg-red-600 text-white px-3 py-1 rounded text-xs mb-2 animate-pulse">
           {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="bg-green-600 text-white px-3 py-1 rounded text-xs mb-2">
+          {success}
         </div>
       )}
       
@@ -352,25 +389,32 @@ function RobotArm() {
       <div className="flex gap-2 mt-2 w-full max-w-md">
         <button
           onClick={handleClawToggle}
-          className={`flex-1 py-2 px-4 rounded-md font-semibold text-sm text-white ${
-            clawOpen ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-orange-600 hover:bg-orange-700'
+          className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm text-white transition-colors ${
+            clawClosed 
+              ? 'bg-orange-600 hover:bg-orange-700' 
+              : 'bg-yellow-600 hover:bg-yellow-700'
           }`}
         >
-          {clawOpen ? '✊ Grab' : `🖐️ Drop${heldBox ? ' 📦' : ''}`}
+          {clawClosed ? (
+            <>🖐️ Open Claw{heldBox ? ' 📦' : ''}</>
+          ) : (
+            <>✊ Close Claw</>
+          )}
         </button>
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-semibold text-sm"
+          className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-semibold text-sm transition-colors"
+          title="Reset (R)"
         >
-          Reset
+          ↻ Reset
         </button>
       </div>
       
       <div className="grid grid-cols-2 gap-2 mt-2 w-full max-w-md">
-        <div className="bg-gray-800 p-2 rounded-lg">
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-blue-400">Shoulder</span>
-            <span className="text-blue-400">{joint1.toFixed(0)}°</span>
+        <div className="bg-gray-800 p-2.5 rounded-lg">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-blue-400 font-medium">Shoulder</span>
+            <span className="text-blue-400 font-mono">{joint1.toFixed(0)}°</span>
           </div>
           <input
             type="range"
@@ -378,13 +422,13 @@ function RobotArm() {
             max="180"
             value={joint1}
             onChange={handleSlider1Change}
-            className="w-full h-1 bg-blue-900 rounded appearance-none cursor-pointer"
+            className="w-full h-1.5 bg-blue-900 rounded appearance-none cursor-pointer"
           />
         </div>
-        <div className="bg-gray-800 p-2 rounded-lg">
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-green-400">Elbow</span>
-            <span className="text-green-400">{joint2.toFixed(0)}°</span>
+        <div className="bg-gray-800 p-2.5 rounded-lg">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-green-400 font-medium">Elbow</span>
+            <span className="text-green-400 font-mono">{joint2.toFixed(0)}°</span>
           </div>
           <input
             type="range"
@@ -392,9 +436,15 @@ function RobotArm() {
             max="150"
             value={joint2}
             onChange={handleSlider2Change}
-            className="w-full h-1 bg-green-900 rounded appearance-none cursor-pointer"
+            className="w-full h-1.5 bg-green-900 rounded appearance-none cursor-pointer"
           />
         </div>
+      </div>
+      
+      <div className="text-gray-500 text-xs mt-2 text-center">
+        <kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">Space</kbd> or{' '}
+        <kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">C</kbd> to toggle claw •{' '}
+        <kbd className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">R</kbd> to reset
       </div>
     </div>
   );
