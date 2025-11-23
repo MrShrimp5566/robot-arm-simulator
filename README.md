@@ -2,6 +2,8 @@
 
 An interactive 2D robot arm physics simulator built with React and HTML5 Canvas. Features inverse kinematics, real-time physics simulation, and an intuitive drag-and-drop interface.
 
+**🎮 [Live Demo](https://mrshrimp5566.github.io/robot-arm-simulator/)**
+
 ![Robot Arm Simulator](https://img.shields.io/badge/React-18.3-blue)
 ![Vite](https://img.shields.io/badge/Vite-5.4-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
